@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amonti | Cursos de Repostería</title>
+<style>
+:root{
+  --pist:#87966a; --pist2:#aebc92; --cream:#faf7f1; --ink:#4c4038;
+  --muted:#786f67; --line:#e6ddd1; --white:#fff; --soft:#f1ede5; --gold:#c59c53;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+a{text-decoration:none;color:inherit}
+.hidden{display:none!important}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(250,247,241,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-inner{max-width:1180px;margin:auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{font:700 29px Georgia,serif;letter-spacing:2px}
+.nav{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.nav a{font-size:14px}
+.btn{border:0;border-radius:999px;padding:12px 18px;background:var(--pist);color:#fff}
+.btn.secondary{background:var(--soft);color:var(--ink)}
+.btn.outline{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:#fff;color:#a05252;border:1px solid #ead0d0}
+.hero{max-width:1180px;margin:auto;padding:70px 22px;display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+.hero h1{font:500 clamp(44px,6vw,72px)/1 Georgia,serif;margin:10px 0 20px}
+.hero p{font-size:19px;line-height:1.65;color:var(--muted);max-width:600px}
+.kicker{font-size:12px;letter-spacing:2px;font-weight:700;color:var(--pist)}
+.hero-img{min-height:460px;border-radius:130px 130px 26px 26px;background:#eee center/cover;box-shadow:0 16px 40px rgba(76,64,56,.12);position:relative;overflow:hidden;transition:background-image .6s ease}
+.hero-badge{position:absolute;left:20px;bottom:20px;background:rgba(255,255,255,.92);padding:12px 15px;border-radius:14px;max-width:75%}
+.hero-badge strong{display:block;font:500 19px Georgia,serif}
+.hero-badge small{color:var(--muted)}
+.section{max-width:1180px;margin:auto;padding:70px 22px}
+.alt{background:#eef1e8}
+.section h2{font:500 40px Georgia,serif;text-align:center;margin:0 0 10px}
+.section-sub{text-align:center;color:var(--muted);max-width:680px;margin:0 auto 34px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(76,64,56,.08);display:flex;flex-direction:column}
+.card-img{height:235px;background:#eee center/cover}
+.card-body{padding:20px;display:flex;flex-direction:column;flex:1}
+.badge{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--pist);font-weight:700}
+.card h3{font:500 25px Georgia,serif;margin:8px 0}
+.card p{color:var(--muted);line-height:1.5;margin:0 0 14px}
+.price{font:22px Georgia,serif;margin-top:auto;margin-bottom:14px}
+.actions{display:flex;gap:8px}
+.actions .btn{flex:1}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.step{text-align:center;padding:18px}
+.num{width:46px;height:46px;border-radius:50%;background:var(--pist);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.step h3{font:500 20px Georgia,serif}
+.step p{color:var(--muted);line-height:1.5}
+.featured{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.testimonial{background:#fff;border-radius:18px;padding:22px;border:1px solid var(--line)}
+.stars{color:var(--gold);letter-spacing:2px}
+.testimonial p{font:18px/1.6 Georgia,serif}
+.testimonial small{color:var(--muted)}
+.footer{background:var(--ink);color:#fff;text-align:center;padding:44px 20px}
+.cart-toggle{position:relative}
+.count{background:#fff;color:var(--pist);padding:2px 7px;border-radius:99px;margin-left:4px}
+.drawer{position:fixed;right:-440px;top:0;width:min(440px,100%);height:100vh;background:#fff;z-index:70;box-shadow:-10px 0 30px rgba(0,0,0,.15);transition:.3s;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer-head,.drawer-foot{padding:20px;border-bottom:1px solid var(--line)}
+.drawer-head{display:flex;justify-content:space-between;align-items:center}
+.drawer-head h3{font:500 28px Georgia,serif;margin:0}
+.drawer-body{padding:20px;overflow:auto;flex:1}
+.cart-item{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:13px 0}
+.total{display:flex;justify-content:space-between;font-size:20px;margin-bottom:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(30,25,22,.58);z-index:80;display:none;align-items:center;justify-content:center;padding:18px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:22px;max-width:900px;width:100%;max-height:92vh;overflow:auto}
+.modal-topimg{height:330px;background:#eee center/cover}
+.modal-content{padding:28px}
+.close{float:right;border:0;background:var(--soft);width:38px;height:38px;border-radius:50%}
+.course-title{font:500 38px Georgia,serif;margin:0 0 8px}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gallery div{height:170px;border-radius:14px;background:#eee center/cover}
+.review-list{display:grid;gap:12px;margin-top:14px}
+.review-card{border:1px solid var(--line);border-radius:14px;padding:16px}
+.review-card p{margin:6px 0}
+.review-form{background:var(--soft);padding:20px;border-radius:16px;margin-top:20px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+.field label{font-weight:700;font-size:13px}
+.field input,.field textarea,.field select{border:1px solid #d8cec1;border-radius:10px;padding:11px;background:#fff}
+.field textarea{min-height:90px;resize:vertical}
+.form-check{display:flex;gap:9px;align-items:flex-start;margin:10px 0 16px}
+.admin-wrap{background:#f2eee7;min-height:100vh}
+.admin-head{background:var(--ink);color:#fff;padding:30px 22px}
+.admin-head-inner{max-width:1180px;margin:auto}
+.admin-head h1{font:500 38px Georgia,serif;margin:0 0 6px}
+.admin-tabs{max-width:1180px;margin:18px auto;padding:0 22px;display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px}
+.tab.active{background:var(--pist);color:#fff;border-color:var(--pist)}
+.panel{max-width:1180px;margin:auto;padding:0 22px 60px}
+.panel-section{display:none}
+.panel-section.active{display:block}
+.panel-card{background:#fff;border-radius:18px;padding:22px;margin-bottom:18px;border:1px solid var(--line)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.toolbar h3{font:500 27px Georgia,serif;margin:0}
+.admin-row{display:flex;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.thumb{width:82px;height:64px;border-radius:10px;background:#eee center/cover;flex:none}
+.row-main{flex:1}
+.row-main strong{display:block}
+.row-main small{color:var(--muted)}
+.row-actions{display:flex;gap:7px;flex-wrap:wrap}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+.preview-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:10px}
+.preview-gallery .pic{height:120px;border-radius:12px;background:center/cover;position:relative}
+.preview-gallery .pic button{position:absolute;right:5px;top:5px;border:0;border-radius:50%;width:28px;height:28px;background:#fff}
+.pending-card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
+.status{font-size:12px;color:var(--pist);font-weight:700}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--ink);color:#fff;padding:13px 17px;border-radius:10px;display:none;z-index:100}
+.toast.show{display:block}
+@media(max-width:850px){
+ .hero{grid-template-columns:1fr}.grid,.featured{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.preview-gallery{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+ .nav a{display:none}.hero{padding-top:45px}.grid,.featured,.steps{grid-template-columns:1fr}.gallery{grid-template-columns:1fr 1fr}.hero-img{min-height:340px}.section h2{font-size:34px}.admin-row{align-items:flex-start}.row-actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div id="publicView">
+<header class="topbar">
+ <div class="top-inner">
+  <div class="logo">AMONTI</div>
+  <div class="nav">
+   <a href="#cursos">Cursos</a>
+   <a href="#opiniones">Opiniones</a>
+   <button class="btn secondary" id="adminBtn">🔐 Administrador</button>
+   <button class="btn cart-toggle" id="cartBtn">🛒 Carrito <span class="count" id="cartCount">0</span></button>
+  </div>
+ </div>
+</header>
+
+<section class="hero">
+ <div>
+  <div class="kicker" id="heroKicker">CURSOS DE REPOSTERÍA AMONTI</div>
+  <h1 id="heroTitle">Aprende. Hornea.<br><i>Disfruta.</i></h1>
+  <p id="heroText">Explora nuestros cursos, conoce resultados reales de alumnas y arma tu pedido de manera sencilla para enviarlo directamente por WhatsApp.</p>
+  <a href="#cursos" class="btn" style="display:inline-block;margin-top:10px">Ver cursos</a>
+ </div>
+ <div class="hero-img" id="heroImage">
+   <div class="hero-badge">
+     <strong id="heroSlideTitle">Cursos disponibles</strong>
+     <small id="heroSlideSubtitle">Conoce nuestros cursos actuales</small>
+   </div>
+ </div>
+</section>
+
+<section class="section" id="cursos">
+ <h2>Nuestros cursos</h2>
+ <p class="section-sub">Selecciona uno o varios cursos. Puedes ver la información completa, fotos de alumnas y opiniones antes de agregarlos a tu carrito.</p>
+ <div class="grid" id="courseGrid"></div>
+</section>
+
+<section class="alt">
+ <div class="section">
+  <h2>¿Cómo me inscribo?</h2>
+  <p class="section-sub">Sin cuentas, contraseñas ni pagos en línea complicados.</p>
+  <div class="steps">
+   <div class="step"><div class="num">1</div><h3>Elige</h3><p>Revisa los cursos y agrega los que quieras aprender.</p></div>
+   <div class="step"><div class="num">2</div><h3>Arma tu carrito</h3><p>Selecciona uno o varios cursos y revisa tu total.</p></div>
+   <div class="step"><div class="num">3</div><h3>Envía por WhatsApp</h3><p>Tu pedido se prepara automáticamente y llega a Amonti.</p></div>
+   <div class="step"><div class="num">4</div><h3>Paga</h3><p>Recibe los datos para transferencia o depósito.</p></div>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="opiniones">
+ <h2>Lo que dicen nuestras alumnas</h2>
+ <p class="section-sub">Aquí aparecen únicamente las opiniones que Amonti haya elegido como destacadas.</p>
+ <div class="featured" id="featuredReviews"></div>
+</section>
+
+<footer class="footer"><div class="logo">AMONTI</div><p>Cursos de repostería para aprender, disfrutar y compartir.</p></footer>
+</div>
+
+<div id="adminView" class="hidden admin-wrap">
+<div class="topbar">
+ <div class="top-inner">
+  <div class="logo">AMONTI · ADMIN</div>
+  <button class="btn secondary" id="backPublic">👁️ Ver página</button>
+ </div>
+</div>
+<div class="admin-head"><div class="admin-head-inner"><h1>Panel de administración</h1><p>Administra cursos, fotos, testimonios y opiniones destacadas.</p></div></div>
+<div class="admin-tabs">
+ <button class="tab active" data-tab="courses">📚 Cursos</button>
+ <button class="tab" data-tab="editor">➕ Nuevo curso</button>
+ <button class="tab" data-tab="pending">🔔 Opiniones pendientes</button>
+ <button class="tab" data-tab="approved">⭐ Opiniones aprobadas</button>
+ <button class="tab" data-tab="home">🏠 Portada</button>
+ <button class="tab" data-tab="settings">⚙️ Ajustes</button>
+</div>
+<div class="panel">
+ <section class="panel-section active" id="tab-courses">
+  <div class="panel-card">
+   <div class="toolbar"><h3>Mis cursos</h3><button class="btn" id="newCourseBtn">+ Agregar curso</button></div>
+   <div id="adminCourses"></div>
+  </div>
+ </section>
+
+ <section class="panel-section" id="tab-editor">
+  <div class="panel-card">
+   <h3 id="editorTitle" style="font:500 29px Georgia,serif;margin-top:0">Nuevo curso</h3>
+   <input type="hidden" id="editId">
+   <div class="form-grid">
+    <div class="field"><label>Nombre del curso</label><input id="courseName" placeholder="Ej. Roles de canela"></div>
+    <div class="field"><label>Precio</label><input id="coursePrice" type="number" placeholder="100"></div>
+    <div class="field"><label>Categoría</label><select id="courseCat"><option>Repostería</option><option>Panadería</option><option>Nuevo</option></select></div>
+    <div class="field"><label>Etiqueta</label><input id="courseTag" placeholder="Ej. Nuevo curso"></div>
+    <div class="field full"><label>Descripción</label><textarea id="courseDesc"></textarea></div>
+    <div class="field full"><label>¿Qué aprenderán? (una línea por punto)</label><textarea id="courseLearn"></textarea></div>
+    <div class="field full"><label>Foto principal</label><input id="mainImage" type="file" accept="image/*"></div>
+    <div class="field full"><label>Fotos de alumnas</label><input id="studentImages" type="file" accept="image/*" multiple></div>
+   </div>
+   <div id="galleryPreview" class="preview-gallery"></div>
+   <div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="saveCourseBtn">Guardar curso</button><button class="btn secondary" id="cancelEditBtn">Cancelar</button></div>
+  </div>
+ </section>
+
+ <section class="panel-section" id="tab-pending">
+  <div class="panel-card"><div class="toolbar"><h3>Opiniones pendientes</h3><span class="status" id="pendingCount"></span></div><div id="pendingReviews"></div></div>
+ </section>
+
+ <section class="panel-section" id="tab-approved">
+  <div class="panel-card"><div class="toolbar"><h3>Opiniones aprobadas</h3><span class="note">Activa “Destacar en inicio” para elegir cuáles aparecen en la página principal.</span></div><div id="approvedReviews"></div></div>
+ </section>
+
+
+ <section class="panel-section" id="tab-home">
+  <div class="panel-card">
+   <h3 style="font:500 29px Georgia,serif;margin-top:0">Portada de la página</h3>
+   <p class="note">Aquí puedes cambiar el texto de bienvenida y las imágenes que rotan automáticamente en la portada.</p>
+   <div class="form-grid">
+    <div class="field full"><label>Título principal</label><input id="homeTitle" placeholder="Aprende. Hornea. Disfruta."></div>
+    <div class="field full"><label>Texto de bienvenida</label><textarea id="homeText"></textarea></div>
+    <div class="field"><label>Intervalo del carrusel (segundos)</label><input id="slideSeconds" type="number" min="2" value="2"></div>
+   </div>
+
+   <h4 style="font:500 22px Georgia,serif;margin-bottom:8px">Sección: Cursos disponibles</h4>
+   <p class="note">Se mostrarán automáticamente fotos de los cursos que ya tienes registrados.</p>
+
+   <h4 style="font:500 22px Georgia,serif;margin-bottom:8px;margin-top:24px">Sección: Próximo curso</h4>
+   <div class="form-grid">
+    <div class="field"><label>Nombre del próximo curso</label><input id="nextCourseName" placeholder="Ej. Tarta vasca"></div>
+    <div class="field"><label>Subtítulo</label><input id="nextCourseSubtitle" placeholder="Próximamente"></div>
+    <div class="field full"><label>Fotos del próximo curso</label><input id="nextCourseImages" type="file" accept="image/*" multiple></div>
+   </div>
+   <div id="nextPreview" class="preview-gallery"></div>
+   <div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="saveHomeBtn">Guardar portada</button></div>
+  </div>
+ </section>
+
+ <section class="panel-section" id="tab-settings">
+  <div class="panel-card">
+   <h3 style="font:500 29px Georgia,serif;margin-top:0">WhatsApp Business</h3>
+   <div class="field"><label>Número</label><input id="waInput" value="5213315123124"></div>
+   <button class="btn" id="saveSettingsBtn">Guardar</button>
+  </div>
+ </section>
+</div>
+</div>
+
+<div class="drawer" id="cartDrawer">
+ <div class="drawer-head"><h3>Mi carrito</h3><button class="close" id="closeCart">×</button></div>
+ <div class="drawer-body" id="cartItems"></div>
+ <div class="drawer-foot"><div class="total"><span>Total</span><strong id="cartTotal">$0 MXN</strong></div><button class="btn" style="width:100%" id="sendWhatsApp">💬 Enviar pedido por WhatsApp</button><p class="note">Después recibirás los datos para transferencia o depósito.</p></div>
+</div>
+
+<div class="modal-bg" id="courseModal">
+ <div class="modal">
+  <div id="modalTopImg" class="modal-topimg"></div>
+  <div class="modal-content">
+   <button class="close" id="closeModal">×</button>
+   <div id="courseModalBody"></div>
+  </div>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const seedCourses = [
+ {id:1,name:"Pizza estilo italiano",price:100,cat:"Nuevo",tag:"✨ Nuevo",desc:"Aprende a preparar una pizza estilo italiano desde la masa hasta el horneado.",img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=85",learn:["Masa estilo italiano","Fermentación","Formado y horneado","Salsa y armado"],gallery:[]},
+ {id:2,name:"Brownie S'mores",price:100,cat:"Repostería",tag:"Repostería",desc:"Brownie intenso de chocolate con galleta y malvavisco.",img:"https://images.unsplash.com/photo-1564355808539-22fda35bed7e?auto=format&fit=crop&w=900&q=85",learn:["Brownie de chocolate","Capa de galleta","Malvavisco","Tips de horneado"],gallery:[]},
+ {id:3,name:"Roll Cake",price:100,cat:"Repostería",tag:"Repostería",desc:"Aprende a preparar un roll cake suave y perfectamente enrollado.",img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=85",learn:["Bizcocho flexible","Relleno","Enrollado sin grietas","Decoración"],gallery:[]},
+ {id:4,name:"Roles de canela",price:100,cat:"Panadería",tag:"Panadería",desc:"Roles grandes, suaves, esponjosos y glaseados.",img:"https://images.unsplash.com/photo-1509365465985-25d11c17e812?auto=format&fit=crop&w=900&q=85",learn:["Masa enriquecida","Fermentación","Formado","Glaseado"],gallery:[]},
+ {id:5,name:"Cheesecake japonés",price:100,cat:"Repostería",tag:"Repostería",desc:"Cheesecake japonés ligero y esponjoso.",img:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=900&q=85",learn:["Merengue","Mezcla sin perder aire","Baño María","Horneado"],gallery:[]},
+ {id:6,name:"Mil hojas",price:100,cat:"Repostería",tag:"Repostería",desc:"Capas crujientes, crema y acabado elegante.",img:"https://images.unsplash.com/photo-1559622214-f8a9850965bb?auto=format&fit=crop&w=900&q=85",learn:["Hojaldre","Crema","Montaje","Acabado"],gallery:[]}
+];
+let courses = JSON.parse(localStorage.getItem("amontiCoursesV3") || "null") || seedCourses;
+let reviews = JSON.parse(localStorage.getItem("amontiReviewsV3") || "[]");
+let cart = [];
+let wa = localStorage.getItem("amontiWAV3") || "5213315123124";
+let homeSettings = JSON.parse(localStorage.getItem("amontiHomeV4") || "null") || {
+  title:"Aprende. Hornea.<br><i>Disfruta.</i>",
+  text:"Explora nuestros cursos, conoce resultados reales de alumnas y arma tu pedido de manera sencilla para enviarlo directamente por WhatsApp.",
+  seconds:2,
+  nextName:"Próximo curso",
+  nextSubtitle:"Muy pronto",
+  nextImages:[]
+};
+let editGallery = [];
+let nextImagesTemp = [...homeSettings.nextImages];
+let heroSlides = [];
+let heroIndex = 0;
+let heroTimer = null;
+
+const $ = id => document.getElementById(id);
+function saveAll(){ localStorage.setItem("amontiCoursesV3",JSON.stringify(courses)); localStorage.setItem("amontiReviewsV3",JSON.stringify(reviews)); localStorage.setItem("amontiHomeV4",JSON.stringify(homeSettings)); }
+function toast(msg){$("toast").textContent=msg;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
+function fileToData(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+
+
+function rebuildHeroSlides(){
+  heroSlides = [];
+  courses.forEach(c=>heroSlides.push({img:c.img,title:"Curso disponible",subtitle:c.name}));
+  homeSettings.nextImages.forEach(img=>heroSlides.push({img,title:homeSettings.nextName||"Próximo curso",subtitle:homeSettings.nextSubtitle||"Muy pronto"}));
+  if(!heroSlides.length) heroSlides=[{img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85",title:"Cursos Amonti",subtitle:"Aprende con nosotros"}];
+  heroIndex=0;
+  renderHeroSlide();
+  if(heroTimer) clearInterval(heroTimer);
+  heroTimer=setInterval(()=>{heroIndex=(heroIndex+1)%heroSlides.length;renderHeroSlide()}, Math.max(2,Number(homeSettings.seconds)||2)*1000);
+}
+function renderHeroSlide(){
+  const s=heroSlides[heroIndex];
+  $("heroImage").style.backgroundImage=`url('${s.img}')`;
+  $("heroSlideTitle").textContent=s.title;
+  $("heroSlideSubtitle").textContent=s.subtitle;
+}
+function renderHome(){
+  $("heroTitle").innerHTML=homeSettings.title;
+  $("heroText").textContent=homeSettings.text;
+  rebuildHeroSlides();
+}
+
+function renderCourses(){
+ $("courseGrid").innerHTML = courses.map(c=>`
+  <article class="card">
+   <div class="card-img" style="background-image:url('${c.img}')"></div>
+   <div class="card-body">
+    <div class="badge">${c.tag}</div><h3>${c.name}</h3><p>${c.desc}</p>
+    <div class="price">$${c.price} MXN</div>
+    <div class="actions"><button class="btn secondary view-course" data-id="${c.id}">Ver curso</button><button class="btn add-cart" data-id="${c.id}">Agregar</button></div>
+   </div>
+  </article>`).join("");
+ document.querySelectorAll(".view-course").forEach(b=>b.addEventListener("click",()=>openCourse(+b.dataset.id)));
+ document.querySelectorAll(".add-cart").forEach(b=>b.addEventListener("click",()=>addCart(+b.dataset.id)));
+ renderFeatured();
+}
+
+function renderFeatured(){
+ const list = reviews.filter(r=>r.status==="approved" && r.featured);
+ $("featuredReviews").innerHTML = list.length ? list.slice(0,6).map(r=>{
+   const c=courses.find(x=>x.id===r.courseId);
+   return `<div class="testimonial">${r.photo?`<div style="height:180px;border-radius:14px;margin-bottom:14px;background:url('${r.photo}') center/cover"></div>`:""}<div class="stars">${"★".repeat(r.stars)}</div><p>“${r.text}”</p><small>— ${r.name||"Alumna Amonti"} · ${c?c.name:"Curso Amonti"}</small></div>`
+ }).join("") : `<div style="grid-column:1/-1;text-align:center;color:var(--muted)">Aquí aparecerán las opiniones que marques como destacadas desde el administrador.</div>`;
+}
+
+function openCourse(id){
+ const c=courses.find(x=>x.id===id); if(!c)return;
+ const approved=reviews.filter(r=>r.courseId===id && r.status==="approved");
+ $("modalTopImg").style.backgroundImage=`url('${c.img}')`;
+ $("courseModalBody").innerHTML=`
+  <div class="badge">${c.tag}</div><h2 class="course-title">${c.name}</h2><p style="color:var(--muted);line-height:1.6">${c.desc}</p>
+  <h3>¿Qué aprenderás?</h3><ul>${c.learn.map(x=>`<li style="margin:7px 0">${x}</li>`).join("")}</ul>
+  <h3>♡ Así les quedó a nuestras alumnas</h3>
+  <div class="gallery">${c.gallery.length?c.gallery.map(x=>`<div style="background-image:url('${x}')"></div>`).join(""):`<p style="color:var(--muted);grid-column:1/-1">Todavía no hay fotos publicadas para este curso.</p>`}</div>
+  <h3 style="margin-top:24px">Opiniones de alumnas</h3>
+  <div class="review-list">${approved.length?approved.map(r=>`<div class="review-card"><div class="stars">${"★".repeat(r.stars)}</div><p>“${r.text}”</p><small>— ${r.name||"Alumna Amonti"}</small>${r.photo?`<div style="height:150px;border-radius:12px;margin-top:10px;background:url('${r.photo}') center/cover"></div>`:""}</div>`).join(""):`<p style="color:var(--muted)">Todavía no hay opiniones aprobadas.</p>`}</div>
+  <div class="review-form">
+   <h3 style="margin-top:0">⭐ Deja tu opinión</h3>
+   <div class="field"><label>Nombre que quieres mostrar públicamente</label><input id="reviewName" placeholder="Ej. María, María G. o Anónimo"></div>
+   <div class="field"><label>Calificación</label><select id="reviewStars"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select></div>
+   <div class="field"><label>Tu comentario</label><textarea id="reviewText" placeholder="Cuéntanos cómo te fue..."></textarea></div>
+   <div class="field"><label>Foto de tu resultado (opcional)</label><input id="reviewPhoto" type="file" accept="image/*"></div>
+   <label class="form-check"><input id="reviewConsent" type="checkbox"><span>Autorizo que Amonti publique mi comentario y, si adjunto una foto, también esa imagen.</span></label>
+   <button class="btn" id="submitReview">Enviar mi opinión</button>
+   <p class="note">Tu opinión será revisada por Amonti antes de publicarse.</p>
+  </div>
+  <div class="price">$${c.price} MXN</div><button class="btn" style="width:100%" id="modalAddCart">🛒 Agregar al carrito</button>`;
+ $("modalAddCart").addEventListener("click",()=>addCart(id));
+ $("submitReview").addEventListener("click",()=>submitReview(id));
+ $("courseModal").classList.add("show");
+}
+
+async function submitReview(courseId){
+ const text=$("reviewText").value.trim(), consent=$("reviewConsent").checked;
+ if(!text){toast("Escribe tu opinión");return}
+ if(!consent){toast("Necesitas autorizar la publicación");return}
+ let photo=""; const f=$("reviewPhoto").files[0]; if(f) photo=await fileToData(f);
+ reviews.push({id:Date.now(),courseId,name:$("reviewName").value.trim()||"Anónimo",stars:+$("reviewStars").value,text,photo,status:"pending",featured:false});
+ saveAll(); toast("Opinión enviada para revisión"); $("courseModal").classList.remove("show"); renderAdmin();
+}
+
+function addCart(id){const c=courses.find(x=>x.id===id);if(!cart.find(x=>x.id===id))cart.push(c);renderCart();$("cartDrawer").classList.add("open")}
+function renderCart(){
+ $("cartCount").textContent=cart.length;
+ $("cartItems").innerHTML=cart.length?cart.map(c=>`<div class="cart-item"><div><strong>${c.name}</strong><br><small>$${c.price} MXN</small></div><button class="btn danger remove-cart" data-id="${c.id}">Eliminar</button></div>`).join(""):`<p style="color:var(--muted);text-align:center">Tu carrito está vacío.</p>`;
+ $("cartTotal").textContent="$"+cart.reduce((s,c)=>s+c.price,0)+" MXN";
+ document.querySelectorAll(".remove-cart").forEach(b=>b.addEventListener("click",()=>{cart=cart.filter(x=>x.id!==+b.dataset.id);renderCart()}));
+}
+
+function sendWA(){
+ if(!cart.length){toast("Agrega al menos un curso");return}
+ const total=cart.reduce((s,c)=>s+c.price,0);
+ const lines=cart.map(c=>`• ${c.name} — $${c.price} MXN`).join("\n");
+ const msg=`Hola Amonti 👋🏻\n\nMe gustaría inscribirme a estos cursos:\n${lines}\n\nTotal: $${total} MXN\n\nQuedo pendiente de los datos para realizar mi transferencia o depósito. 😊`;
+ window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+
+
+function renderNextPreview(){
+ $("nextPreview").innerHTML=nextImagesTemp.map((x,i)=>`<div class="pic" style="background-image:url('${x}')"><button class="remove-next" data-i="${i}">×</button></div>`).join("");
+ document.querySelectorAll(".remove-next").forEach(b=>b.addEventListener("click",()=>{nextImagesTemp.splice(+b.dataset.i,1);renderNextPreview()}));
+}
+async function saveHome(){
+ for(const f of [...$("nextCourseImages").files]) nextImagesTemp.push(await fileToData(f));
+ const plainTitle=$("homeTitle").value.trim()||"Aprende. Hornea. Disfruta.";
+ homeSettings={
+   title:plainTitle,
+   text:$("homeText").value.trim(),
+   seconds:Math.max(2,+$("slideSeconds").value||2),
+   nextName:$("nextCourseName").value.trim()||"Próximo curso",
+   nextSubtitle:$("nextCourseSubtitle").value.trim()||"Muy pronto",
+   nextImages:[...nextImagesTemp]
+ };
+ saveAll(); renderHome(); renderNextPreview(); $("nextCourseImages").value=""; toast("Portada actualizada");
+}
+
+function switchAdmin(show){
+ $("publicView").classList.toggle("hidden",show);$("adminView").classList.toggle("hidden",!show);if(show)renderAdmin()
+}
+function showTab(name){
+ document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
+ document.querySelectorAll(".panel-section").forEach(x=>x.classList.remove("active"));
+ $("tab-"+name).classList.add("active");
+}
+
+function renderAdmin(){
+ $("adminCourses").innerHTML=courses.map(c=>`<div class="admin-row"><div class="thumb" style="background-image:url('${c.img}')"></div><div class="row-main"><strong>${c.name}</strong><small>$${c.price} · ${c.gallery.length} fotos</small></div><div class="row-actions"><button class="btn outline edit-course" data-id="${c.id}">Editar</button><button class="btn outline dup-course" data-id="${c.id}">Duplicar</button><button class="btn danger del-course" data-id="${c.id}">Eliminar</button></div></div>`).join("");
+ document.querySelectorAll(".edit-course").forEach(b=>b.addEventListener("click",()=>editCourse(+b.dataset.id)));
+ document.querySelectorAll(".dup-course").forEach(b=>b.addEventListener("click",()=>duplicateCourse(+b.dataset.id)));
+ document.querySelectorAll(".del-course").forEach(b=>b.addEventListener("click",()=>deleteCourse(+b.dataset.id)));
+ renderPending(); renderApproved(); $("waInput").value=wa;
+ $("homeTitle").value=homeSettings.title.replace(/<br>/g," ").replace(/<[^>]+>/g,"");
+ $("homeText").value=homeSettings.text;
+ $("slideSeconds").value=homeSettings.seconds;
+ $("nextCourseName").value=homeSettings.nextName;
+ $("nextCourseSubtitle").value=homeSettings.nextSubtitle;
+ nextImagesTemp=[...homeSettings.nextImages];
+ renderNextPreview();
+}
+
+function clearEditor(){
+ $("editId").value="";$("courseName").value="";$("coursePrice").value="";$("courseCat").value="Repostería";$("courseTag").value="";$("courseDesc").value="";$("courseLearn").value="";$("mainImage").value="";$("studentImages").value="";editGallery=[];$("galleryPreview").innerHTML="";$("editorTitle").textContent="Nuevo curso";
+}
+function editCourse(id){
+ const c=courses.find(x=>x.id===id);showTab("editor");$("editorTitle").textContent="Editar curso";$("editId").value=c.id;$("courseName").value=c.name;$("coursePrice").value=c.price;$("courseCat").value=c.cat;$("courseTag").value=c.tag;$("courseDesc").value=c.desc;$("courseLearn").value=c.learn.join("\n");editGallery=[...c.gallery];renderEditGallery();
+}
+function renderEditGallery(){
+ $("galleryPreview").innerHTML=editGallery.map((x,i)=>`<div class="pic" style="background-image:url('${x}')"><button class="remove-gallery" data-i="${i}">×</button></div>`).join("");
+ document.querySelectorAll(".remove-gallery").forEach(b=>b.addEventListener("click",()=>{editGallery.splice(+b.dataset.i,1);renderEditGallery()}));
+}
+async function saveCourse(){
+ const id=+$("editId").value||Date.now(), old=courses.find(x=>x.id===id);
+ let img=old?.img||"https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=85";
+ if($("mainImage").files[0]) img=await fileToData($("mainImage").files[0]);
+ for(const f of [...$("studentImages").files]) editGallery.push(await fileToData(f));
+ const c={id,name:$("courseName").value.trim()||"Curso sin nombre",price:+$("coursePrice").value||0,cat:$("courseCat").value,tag:$("courseTag").value.trim()||$("courseCat").value,desc:$("courseDesc").value.trim(),learn:$("courseLearn").value.split("\n").map(x=>x.trim()).filter(Boolean),img,gallery:editGallery};
+ const idx=courses.findIndex(x=>x.id===id); if(idx>=0)courses[idx]=c;else courses.push(c);saveAll();renderCourses();renderAdmin();clearEditor();showTab("courses");toast("Curso guardado");
+}
+function duplicateCourse(id){const c=JSON.parse(JSON.stringify(courses.find(x=>x.id===id)));c.id=Date.now();c.name+=" — copia";courses.push(c);saveAll();renderCourses();renderAdmin();toast("Curso duplicado")}
+function deleteCourse(id){if(confirm("¿Eliminar este curso?")){courses=courses.filter(x=>x.id!==id);reviews=reviews.filter(r=>r.courseId!==id);saveAll();renderCourses();renderAdmin();toast("Curso eliminado")}}
+
+function renderPending(){
+ const list=reviews.filter(r=>r.status==="pending");$("pendingCount").textContent=list.length+" pendiente(s)";
+ $("pendingReviews").innerHTML=list.length?list.map(r=>reviewAdminCard(r,true)).join(""):`<p class="note">No hay opiniones pendientes.</p>`;
+ document.querySelectorAll(".approve-review").forEach(b=>b.addEventListener("click",()=>setReviewStatus(+b.dataset.id,"approved")));
+ document.querySelectorAll(".reject-review").forEach(b=>b.addEventListener("click",()=>setReviewStatus(+b.dataset.id,"rejected")));
+}
+function renderApproved(){
+ const list=reviews.filter(r=>r.status==="approved");
+ $("approvedReviews").innerHTML=list.length?list.map(r=>reviewAdminCard(r,false)).join(""):`<p class="note">Todavía no hay opiniones aprobadas.</p>`;
+ document.querySelectorAll(".feature-review").forEach(b=>b.addEventListener("change",()=>toggleFeatured(+b.dataset.id,b.checked)));
+ document.querySelectorAll(".delete-review").forEach(b=>b.addEventListener("click",()=>deleteReview(+b.dataset.id)));
+}
+function reviewAdminCard(r,pending){
+ const c=courses.find(x=>x.id===r.courseId);
+ return `<div class="pending-card"><div class="status">${c?c.name:"Curso"}</div><div class="stars">${"★".repeat(r.stars)}</div><strong>${r.name}</strong><p>“${r.text}”</p>${r.photo?`<div style="height:150px;max-width:260px;border-radius:12px;background:url('${r.photo}') center/cover;margin:10px 0"></div>`:""}${pending?`<div style="display:flex;gap:8px"><button class="btn approve-review" data-id="${r.id}">✓ Aprobar</button><button class="btn danger reject-review" data-id="${r.id}">Rechazar</button></div>`:`<label class="form-check"><input class="feature-review" data-id="${r.id}" type="checkbox" ${r.featured?"checked":""}><span>⭐ Destacar en página principal</span></label><button class="btn danger delete-review" data-id="${r.id}">Eliminar</button>`}</div>`;
+}
+function setReviewStatus(id,status){const r=reviews.find(x=>x.id===id);r.status=status;saveAll();renderAdmin();renderFeatured();toast(status==="approved"?"Opinión aprobada":"Opinión rechazada")}
+function toggleFeatured(id,val){const r=reviews.find(x=>x.id===id);r.featured=val;saveAll();renderFeatured();toast(val?"Opinión destacada":"Opinión retirada del inicio")}
+function deleteReview(id){reviews=reviews.filter(x=>x.id!==id);saveAll();renderAdmin();renderFeatured();toast("Opinión eliminada")}
+
+$("adminBtn").addEventListener("click",()=>switchAdmin(true));
+$("backPublic").addEventListener("click",()=>switchAdmin(false));
+$("cartBtn").addEventListener("click",()=>{renderCart();$("cartDrawer").classList.add("open")});
+$("closeCart").addEventListener("click",()=>$("cartDrawer").classList.remove("open"));
+$("closeModal").addEventListener("click",()=>$("courseModal").classList.remove("show"));
+$("courseModal").addEventListener("click",e=>{if(e.target===$("courseModal"))$("courseModal").classList.remove("show")});
+$("sendWhatsApp").addEventListener("click",sendWA);
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+$("newCourseBtn").addEventListener("click",()=>{clearEditor();showTab("editor")});
+$("saveCourseBtn").addEventListener("click",saveCourse);
+$("cancelEditBtn").addEventListener("click",()=>{clearEditor();showTab("courses")});
+$("saveHomeBtn").addEventListener("click",saveHome);
+$("saveSettingsBtn").addEventListener("click",()=>{wa=$("waInput").value.replace(/\D/g,"");localStorage.setItem("amontiWAV3",wa);toast("WhatsApp guardado")});
+renderHome();renderCourses();renderCart();
+</script>
+</body>
+</html>
