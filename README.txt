@@ -16,3 +16,8 @@ PORTADA V5:
 - Las imágenes se precargan antes de mostrarse.
 - En celular el carrusel usa mínimo 3.5 segundos para evitar saltos.
 - Solo se muestran imágenes que cargan correctamente.
+
+PORTADA V6:
+- Cada foto del próximo curso tiene botón × para eliminarla.
+- Se agregó "Eliminar todas las fotos del próximo curso".
+- Las imágenes eliminadas se borran de home_slides y de Supabase Storage.

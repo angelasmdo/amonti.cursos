@@ -1,6 +1,13 @@
 if(!window.supabase){document.getElementById("loginError").textContent="No se pudo cargar la conexión con Supabase. Recarga la página.";throw new Error("Supabase JS no cargó");}
 const cfg=window.AMONTI_CONFIG,db=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY),$=id=>document.getElementById(id);let courses=[],galleries=[],reviews=[],home=null,slides=[];
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}function money(n){return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",maximumFractionDigits:0}).format(Number(n||0))}function showTab(name){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));document.querySelectorAll(".panel-section").forEach(x=>x.classList.remove("active"));$("tab-"+name).classList.add("active")}
+function pathFromPublicUrl(url){
+  if(!url) return null;
+  const needle=`/storage/v1/object/public/${cfg.BUCKET}/`;
+  const i=url.indexOf(needle);
+  return i<0 ? null : decodeURIComponent(url.slice(i+needle.length));
+}
+
 async function upload(file,folder){
   if(!file) return null;
   if(!file.type.startsWith("image/")) throw new Error("Selecciona un archivo de imagen.");
@@ -38,6 +45,76 @@ function bindReviews(){document.querySelectorAll(".approve-review").forEach(b=>b
 function renderPending(){const l=reviews.filter(r=>r.status==="pending");$("pendingCount").textContent=`${l.length} pendiente(s)`;$("pendingReviews").innerHTML=l.length?l.map(r=>reviewCard(r,true)).join(""):`<p class="note">No hay opiniones pendientes.</p>`;bindReviews()}
 function renderApproved(){const l=reviews.filter(r=>r.status==="approved");$("approvedReviews").innerHTML=l.length?l.map(r=>reviewCard(r,false)).join(""):`<p class="note">No hay opiniones aprobadas.</p>`;bindReviews()}
 async function setReview(id,patch){const q=await db.from("reviews").update(patch).eq("id",id);if(q.error)return toast(q.error.message);await loadAll()}async function deleteReview(id){if(!confirm("¿Eliminar esta opinión?"))return;const q=await db.from("reviews").delete().eq("id",id);if(q.error)return toast(q.error.message);await loadAll()}
-function renderHomeEditor(){$("homeTitle").value=home?.title||"Aprende. Hornea. Disfruta.";$("homeText").value=home?.welcome_text||"";$("slideSeconds").value=home?.slide_seconds||2;$("nextCourseName").value=home?.next_course_name||"Próximo curso";$("nextCourseSubtitle").value=home?.next_course_subtitle||"Muy pronto";$("nextPreview").innerHTML=slides.map(s=>`<div class="pic" style="background-image:url('${s.image_url}')"></div>`).join("")}
+function renderHomeEditor(){
+  $("homeTitle").value=home?.title||"Aprende. Hornea. Disfruta.";
+  $("homeText").value=home?.welcome_text||"";
+  $("slideSeconds").value=home?.slide_seconds||2;
+  $("nextCourseName").value=home?.next_course_name||"Próximo curso";
+  $("nextCourseSubtitle").value=home?.next_course_subtitle||"Muy pronto";
+
+  $("nextPreview").innerHTML=slides.length
+    ? slides.map(s=>`
+      <div class="pic" style="background-image:url('${s.image_url}')">
+        <button class="remove-slide" data-id="${s.id}" title="Eliminar foto">×</button>
+      </div>`).join("")
+    : '<p class="note" style="grid-column:1/-1">No hay fotos del próximo curso.</p>';
+
+  document.querySelectorAll(".remove-slide").forEach(b=>{
+    b.addEventListener("click",()=>deleteSlide(+b.dataset.id));
+  });
+}
+
 async function saveHome(){try{const data={title:$("homeTitle").value.trim()||"Aprende. Hornea. Disfruta.",welcome_text:$("homeText").value.trim(),slide_seconds:Math.max(2,+$("slideSeconds").value||2),next_course_name:$("nextCourseName").value.trim()||"Próximo curso",next_course_subtitle:$("nextCourseSubtitle").value.trim()||"Muy pronto",updated_at:new Date().toISOString()};if(home?.id){const q=await db.from("home_settings").update(data).eq("id",home.id);if(q.error)throw q.error}else{const q=await db.from("home_settings").insert(data);if(q.error)throw q.error}let order=slides.length;for(const f of [...$("nextCourseImages").files]){const url=await upload(f,"home");const q=await db.from("home_slides").insert({image_url:url,sort_order:order++});if(q.error)throw q.error}toast("Portada guardada");await loadAll()}catch(e){toast(e.message||"No se pudo guardar")}}
-$("loginBtn").addEventListener("click",login);$("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();location.reload()});document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));$("newCourseBtn").addEventListener("click",()=>{clearEditor();showTab("editor")});$("saveCourseBtn").addEventListener("click",saveCourse);$("cancelEditBtn").addEventListener("click",()=>{clearEditor();showTab("courses")});$("saveHomeBtn").addEventListener("click",saveHome);authGate();
+
+async function deleteSlide(id){
+  const s=slides.find(x=>x.id===id);
+  if(!s) return;
+  if(!confirm("¿Eliminar esta foto del próximo curso?")) return;
+
+  const path=pathFromPublicUrl(s.image_url);
+  if(path){
+    const rm=await db.storage.from(cfg.BUCKET).remove([path]);
+    if(rm.error){
+      toast("No se pudo borrar la imagen: "+rm.error.message);
+      return;
+    }
+  }
+
+  const q=await db.from("home_slides").delete().eq("id",id);
+  if(q.error){
+    toast("No se pudo eliminar: "+q.error.message);
+    return;
+  }
+
+  toast("Foto eliminada");
+  await loadAll();
+}
+
+async function clearNextImages(){
+  if(!slides.length){
+    toast("No hay fotos para eliminar");
+    return;
+  }
+  if(!confirm("¿Eliminar TODAS las fotos del próximo curso?")) return;
+
+  const paths=slides.map(s=>pathFromPublicUrl(s.image_url)).filter(Boolean);
+  if(paths.length){
+    const rm=await db.storage.from(cfg.BUCKET).remove(paths);
+    if(rm.error){
+      toast("No se pudieron borrar las imágenes: "+rm.error.message);
+      return;
+    }
+  }
+
+  const ids=slides.map(s=>s.id);
+  const q=await db.from("home_slides").delete().in("id",ids);
+  if(q.error){
+    toast("No se pudieron eliminar: "+q.error.message);
+    return;
+  }
+
+  toast("Fotos del próximo curso eliminadas");
+  await loadAll();
+}
+
+$("loginBtn").addEventListener("click",login);$("logoutBtn").addEventListener("click",async()=>{await db.auth.signOut();location.reload()});document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));$("newCourseBtn").addEventListener("click",()=>{clearEditor();showTab("editor")});$("saveCourseBtn").addEventListener("click",saveCourse);$("cancelEditBtn").addEventListener("click",()=>{clearEditor();showTab("courses")});$("saveHomeBtn").addEventListener("click",saveHome);$("clearNextImagesBtn").addEventListener("click",clearNextImages);authGate();
