@@ -91,14 +91,14 @@ function sendWA(){
   const total=cart.reduce((s,c)=>s+Number(c.price),0);
   const lines=cart.map(c=>`• ${c.name} — ${money(c.price)}`).join("\n");
 
-  const message=`Hola Amonti 👋🏻
+  const message=`Hola Amonti
 
 Me gustaría inscribirme a estos cursos:
 ${lines}
 
 Total: ${money(total)}
 
-Quedo pendiente de los datos para realizar mi transferencia o depósito. 😊`;
+Quedo pendiente de los datos para realizar mi transferencia o depósito.`;
 
   window.open(
     `https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(message)}`,
