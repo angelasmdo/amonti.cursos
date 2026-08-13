@@ -10,3 +10,9 @@ Siguiente paso: publicar esta carpeta en Vercel.
 
 
 ACTUALIZACION: agrega el campo '¿Qué incluye la clase?'. Ejecuta primero supabase_agregar_includes.sql en Supabase SQL Editor.
+
+PORTADA V5:
+- Se eliminó la imagen externa de fallback.
+- Las imágenes se precargan antes de mostrarse.
+- En celular el carrusel usa mínimo 3.5 segundos para evitar saltos.
+- Solo se muestran imágenes que cargan correctamente.

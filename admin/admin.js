@@ -1,7 +1,29 @@
 if(!window.supabase){document.getElementById("loginError").textContent="No se pudo cargar la conexión con Supabase. Recarga la página.";throw new Error("Supabase JS no cargó");}
 const cfg=window.AMONTI_CONFIG,db=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY),$=id=>document.getElementById(id);let courses=[],galleries=[],reviews=[],home=null,slides=[];
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}function money(n){return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",maximumFractionDigits:0}).format(Number(n||0))}function showTab(name){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));document.querySelectorAll(".panel-section").forEach(x=>x.classList.remove("active"));$("tab-"+name).classList.add("active")}
-async function upload(file,folder){const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"");const path=`${folder}/${Date.now()}-${crypto.randomUUID()}.${ext}`;const r=await db.storage.from(cfg.BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(r.error)throw r.error;return db.storage.from(cfg.BUCKET).getPublicUrl(path).data.publicUrl}
+async function upload(file,folder){
+  if(!file) return null;
+  if(!file.type.startsWith("image/")) throw new Error("Selecciona un archivo de imagen.");
+  if(file.size>10*1024*1024) throw new Error("La imagen debe pesar menos de 10 MB.");
+  const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-z0-9]/gi,"");
+  const path=`${folder}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  const r=await db.storage.from(cfg.BUCKET).upload(path,file,{
+    contentType:file.type,
+    upsert:false,
+    cacheControl:"3600"
+  });
+  if(r.error) throw r.error;
+  const pub=db.storage.from(cfg.BUCKET).getPublicUrl(path).data.publicUrl;
+  // Verificar que la URL pública exista antes de guardarla en la base.
+  await new Promise((resolve,reject)=>{
+    const im=new Image();
+    im.onload=resolve;
+    im.onerror=()=>reject(new Error("La imagen se subió, pero no se pudo abrir públicamente."));
+    im.src=pub;
+  });
+  return pub;
+}
+
 async function verifyAdmin(){const {data:{session}}=await db.auth.getSession();if(!session)return false;const q=await db.from("admin_users").select("user_id").eq("user_id",session.user.id).maybeSingle();return !q.error&&!!q.data}
 async function authGate(){if(await verifyAdmin()){$("loginView").classList.add("hidden");$("adminApp").classList.remove("hidden");await loadAll()}else{$("loginView").classList.remove("hidden");$("adminApp").classList.add("hidden")}}
 async function login(){const r=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(r.error){$("loginError").textContent="No se pudo iniciar sesión.";return}if(!(await verifyAdmin())){await db.auth.signOut();$("loginError").textContent="Este usuario no tiene permisos de administrador.";return}authGate()}

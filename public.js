@@ -1,7 +1,85 @@
 const cfg=window.AMONTI_CONFIG;const db=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY);const $=id=>document.getElementById(id);let courses=[],galleries=[],reviews=[],cart=[],home=null,slides=[],heroIndex=0,heroTimer=null;
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}function money(n){return new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",maximumFractionDigits:0}).format(Number(n||0))}
 async function load(){const [c,g,r,h,s]=await Promise.all([db.from("courses").select("*").eq("published",true).order("created_at",{ascending:false}),db.from("course_gallery").select("*"),db.from("reviews").select("*").eq("status","approved").order("created_at",{ascending:false}),db.from("home_settings").select("*").limit(1).maybeSingle(),db.from("home_slides").select("*").order("sort_order")]);const err=[c,g,r,h,s].find(x=>x.error);if(err){$("courseGrid").innerHTML=`<p class="note">No se pudo cargar el catálogo: ${err.error.message}</p>`;return}courses=c.data||[];galleries=g.data||[];reviews=r.data||[];home=h.data;slides=s.data||[];renderHome();renderCourses();renderFeatured()}
-function renderHome(){if(home){$("heroTitle").textContent=home.title||"Aprende. Hornea. Disfruta.";$("heroText").textContent=home.welcome_text||""}const hs=[];courses.forEach(c=>{if(c.main_image)hs.push({img:c.main_image,title:"Curso disponible",subtitle:c.name})});slides.forEach(s=>hs.push({img:s.image_url,title:home?.next_course_name||"Próximo curso",subtitle:home?.next_course_subtitle||"Muy pronto"}));if(!hs.length)hs.push({img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85",title:"Cursos Amonti",subtitle:"Aprende con nosotros"});const draw=()=>{const x=hs[heroIndex%hs.length];$("heroImage").style.backgroundImage=`url('${x.img}')`;$("heroSlideTitle").textContent=x.title;$("heroSlideSubtitle").textContent=x.subtitle};draw();if(heroTimer)clearInterval(heroTimer);heroTimer=setInterval(()=>{heroIndex++;draw()},Math.max(2,Number(home?.slide_seconds||2))*1000)}
+async function renderHome(){
+  if(home){
+    $("heroTitle").textContent=home.title||"Aprende. Hornea. Disfruta.";
+    $("heroText").textContent=home.welcome_text||"";
+  }
+
+  const candidates=[];
+
+  // Primero cursos disponibles
+  courses.forEach(c=>{
+    if(c.main_image){
+      candidates.push({
+        img:c.main_image,
+        title:"Curso disponible",
+        subtitle:c.name
+      });
+    }
+  });
+
+  // Después próximo curso
+  slides.forEach(s=>{
+    if(s.image_url){
+      candidates.push({
+        img:s.image_url,
+        title:home?.next_course_name||"Próximo curso",
+        subtitle:home?.next_course_subtitle||"Muy pronto"
+      });
+    }
+  });
+
+  // Precargar y conservar solamente imágenes que realmente abren.
+  const loaded=[];
+  await Promise.all(candidates.map(item=>new Promise(resolve=>{
+    const im=new Image();
+    im.onload=()=>{loaded.push(item);resolve()};
+    im.onerror=()=>resolve();
+    im.src=item.img;
+  })));
+
+  // Mantener el orden original después de precarga.
+  const hs=candidates.filter(c=>loaded.some(x=>x.img===c.img));
+
+  if(heroTimer) clearInterval(heroTimer);
+
+  if(!hs.length){
+    $("heroImage").style.backgroundImage="none";
+    $("heroSlideTitle").textContent="Cursos Amonti";
+    $("heroSlideSubtitle").textContent="Próximamente";
+    return;
+  }
+
+  heroIndex=0;
+
+  const draw=()=>{
+    const x=hs[heroIndex%hs.length];
+    const hero=$("heroImage");
+    hero.style.opacity=".78";
+    setTimeout(()=>{
+      hero.style.backgroundImage=`url("${x.img}")`;
+      $("heroSlideTitle").textContent=x.title;
+      $("heroSlideSubtitle").textContent=x.subtitle;
+      hero.style.opacity="1";
+    },120);
+  };
+
+  draw();
+
+  // En móvil damos un poco más de tiempo para evitar saltos visuales.
+  const configured=Math.max(2,Number(home?.slide_seconds||2));
+  const interval=window.matchMedia("(max-width: 560px)").matches
+    ? Math.max(3.5,configured)
+    : configured;
+
+  heroTimer=setInterval(()=>{
+    heroIndex=(heroIndex+1)%hs.length;
+    draw();
+  },interval*1000);
+}
+
 function renderCourses(){$("courseGrid").innerHTML=courses.length?courses.map(c=>`<article class="card"><div class="card-img" style="background-image:url('${c.main_image||""}')"></div><div class="card-body"><div class="badge">${c.tag||c.category||"Curso"}</div><h3>${c.name}</h3><p>${c.description||""}</p><div class="price">${money(c.price)}</div><div class="actions"><button class="btn secondary view-course" data-id="${c.id}">Ver curso</button><button class="btn add-cart" data-id="${c.id}">Agregar</button></div></div></article>`).join(""):`<p class="note" style="grid-column:1/-1;text-align:center">Próximamente agregaremos los cursos disponibles.</p>`;document.querySelectorAll(".view-course").forEach(b=>b.addEventListener("click",()=>openCourse(+b.dataset.id)));document.querySelectorAll(".add-cart").forEach(b=>b.addEventListener("click",()=>addCart(+b.dataset.id)))}
 function renderFeatured(){const list=reviews.filter(r=>r.featured).slice(0,6);$("featuredReviews").innerHTML=list.length?list.map(r=>{const c=courses.find(x=>x.id===r.course_id);return `<div class="testimonial">${r.photo_url?`<div style="height:180px;border-radius:14px;margin-bottom:14px;background:url('${r.photo_url}') center/cover"></div>`:""}<div class="stars">${"★".repeat(r.stars)}</div><p>“${r.comment}”</p><small>— ${r.display_name||"Alumna Amonti"} · ${c?.name||"Curso Amonti"}</small></div>`}).join(""):`<p class="note" style="grid-column:1/-1;text-align:center">Pronto compartiremos experiencias de nuestras alumnas.</p>`}
 function openCourse(id){const c=courses.find(x=>x.id===id),gal=galleries.filter(x=>x.course_id===id),rev=reviews.filter(x=>x.course_id===id);$("modalTopImg").style.backgroundImage=`url('${c.main_image||""}')`;$("courseModalBody").innerHTML=`<div class="badge">${c.tag||c.category||"Curso"}</div><h2 class="course-title">${c.name}</h2><p style="color:var(--muted);line-height:1.6">${c.description||""}</p><h3>¿Qué aprenderás?</h3><ul>${(c.learn||[]).map(x=>`<li style="margin:7px 0">${x}</li>`).join("")}</ul><h3>¿Qué incluye la clase?</h3><ul>${(c.includes||[]).length?(c.includes||[]).map(x=>`<li style="margin:7px 0">${x}</li>`).join(""):"<li>Consulta el contenido incluido con Amonti.</li>"}</ul><h3>♡ Así les quedó a nuestras alumnas</h3><div class="gallery">${gal.length?gal.map(x=>`<div style="background-image:url('${x.image_url}')"></div>`).join(""):`<p class="note" style="grid-column:1/-1">Todavía no hay fotos publicadas para este curso.</p>`}</div><h3 style="margin-top:24px">Opiniones de alumnas</h3><div class="review-list">${rev.length?rev.map(r=>`<div class="review-card"><div class="stars">${"★".repeat(r.stars)}</div><p>“${r.comment}”</p><small>— ${r.display_name||"Alumna Amonti"}</small>${r.photo_url?`<div style="height:150px;border-radius:12px;margin-top:10px;background:url('${r.photo_url}') center/cover"></div>`:""}</div>`).join(""):`<p class="note">Todavía no hay opiniones aprobadas.</p>`}</div><div class="review-form"><h3 style="margin-top:0">⭐ Deja tu opinión</h3><div class="field"><label>Nombre que quieres mostrar públicamente</label><input id="reviewName" placeholder="Ej. María, María G. o Anónimo"></div><div class="field"><label>Calificación</label><select id="reviewStars"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select></div><div class="field"><label>Tu comentario</label><textarea id="reviewText"></textarea></div><div class="field"><label>Foto de tu resultado (opcional)</label><input id="reviewPhoto" type="file" accept="image/*"></div><label class="form-check"><input id="reviewConsent" type="checkbox"><span>Autorizo que Amonti publique mi comentario y, si adjunto una foto, también esa imagen.</span></label><button class="btn" id="submitReview">Enviar mi opinión</button><p class="note">Tu opinión será revisada antes de publicarse.</p></div><div class="price">${money(c.price)}</div><button class="btn" style="width:100%" id="modalAddCart">🛒 Agregar al carrito</button>`;$("modalAddCart").addEventListener("click",()=>addCart(id));$("submitReview").addEventListener("click",()=>submitReview(id));$("courseModal").classList.add("show")}
